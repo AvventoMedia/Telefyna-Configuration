@@ -5,7 +5,7 @@ import CustomFormField from "@/components/CustomFormField";
 import ExportButton from "@/components/ExportButton";
 import React, {useEffect, useState} from "react";
 import {Playlist, Schedule} from "@/constants";
-import {getConfigJson, modifyConfig} from "@/lib/utils";
+import {getConfigJson, getFilteredPlaylists, getFilteredSchedules, modifyConfig} from "@/lib/utils";
 import RegularButton from "@/components/RegularButton";
 import Image from "next/image";
 import {z} from "zod";
@@ -72,18 +72,10 @@ const DeletePlaylistScheduleForm = () => {
         const savedConfig = getConfigJson()
         if (savedConfig && savedConfig.playlists) {
             // Filter active playlists
-            const filteredPlaylists: Option[] = savedConfig.playlists?.filter((playlist: Playlist) => playlist.active)
-                .map((playlist: Playlist) => ({
-                    label: playlist.name,
-                    value: playlist.name,
-                })) || [];
+            const filteredPlaylists: Option[] = getFilteredPlaylists(savedConfig, true, true) || [];
 
             // Filter active schedules if schedules exist
-            const filteredSchedules: Option[] = savedConfig.schedules?.filter((schedule: Schedule) => schedule.active)
-                .map((schedule: Schedule) => ({
-                    label: `${schedule.name} ${schedule.schedule} | ${schedule.start} | ${Array.isArray(schedule.days) ? schedule.days.join(', ') : ''}`,
-                    value: `${schedule.name} ${schedule.start} ${schedule.schedule}`,
-                })) || [];
+            const filteredSchedules: Option[] = getFilteredSchedules(savedConfig, true, true) || [];
 
             const playlistSeparator: Option = {
                 label: '--- Playlists ---',
@@ -194,7 +186,7 @@ const DeletePlaylistScheduleForm = () => {
                     )}
                 </div>
                 <div className="flex flex-col gap-4 xl:flex-row">
-                    <RegularButton isLoading={loading}>
+                    <RegularButton isLoading={loading} className="shad-blue-btn">
                         Cancel
                     </RegularButton>
                     <ExportButton isLoading={loading} className="shad-danger-btn">

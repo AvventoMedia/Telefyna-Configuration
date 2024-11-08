@@ -28,7 +28,6 @@ export enum FormFieldType {
 
 
 const InitialForm = () => {
-    const isInitialized = useRef(false);
     const [isLoading, setIsLoading] = useState(false);
     const [config, setConfig] = useState<any>(null);
 
@@ -136,13 +135,6 @@ const InitialForm = () => {
                         control={form.control}
                     />
                 </div>
-                {/*<CustomFormField*/}
-                {/*    fieldType={FormFieldType.MULTI_SELECT}*/}
-                {/*    name="notificationsDisabled"*/}
-                {/*    label="Disable OS Notifications"*/}
-                {/*    placeholder="Enter something"*/}
-                {/*    control={form.control}*/}
-                {/*/>*/}
                 <CustomFormField
                     fieldType={FormFieldType.SKELETON}
                     name="configJsonFile"

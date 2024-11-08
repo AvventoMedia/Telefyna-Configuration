@@ -2,6 +2,7 @@ import Image from "next/image";
 import InitialForm from "@/components/forms/InitialForm";
 import {Toaster} from "sonner";
 import DeletePlaylistScheduleForm from "@/components/forms/DeletePlaylistScheduleForm";
+import CreatePlaylistForm from "@/components/forms/CreatePlaylistForm";
 
 export default function Home() {
   return (
@@ -17,8 +18,9 @@ export default function Home() {
                       className="text-white mb-12 h-10 w-fit"
                   />
               </div>
-              <InitialForm/>
-              <DeletePlaylistScheduleForm />
+              {/*<InitialForm/>*/}
+              {/*<DeletePlaylistScheduleForm />*/}
+              <CreatePlaylistForm />
               <div className="text-14-regular mt-20 flex justify-between">
                   <p className="justify-items-end text-dark-600 xl:text-left">
                       @2024 TelefynaConfiguration

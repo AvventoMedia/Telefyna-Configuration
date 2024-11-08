@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {Config} from "@/constants";
+import {Option} from "@/components/forms/DeletePlaylistScheduleForm";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -115,3 +116,60 @@ export function exportConfig(config: any) {
   // Clean up the URL object after download
   URL.revokeObjectURL(url);
 }
+
+/**
+ * Function to retrieve playlists with optional details and active filter
+ */
+export const getFilteredPlaylists = (
+    config: Config,
+    fullySpecified: boolean = false,
+    filterActive: boolean = true
+): Option[] => {
+  return (config.playlists ?? [])
+      .filter((playlist) => !filterActive || playlist.active)
+      .map((playlist, index) => {
+        // Emoji for active/inactive status
+        const statusIcon = playlist.active ? "✅" : "❌";
+
+        // Base name with optional status icon
+        let name = fullySpecified ? `${statusIcon} ${playlist.name}` : playlist.name;
+
+        // Additional details if fully specified
+        if (fullySpecified) {
+          name += ` #${index + 1}`;
+          if (playlist.start) name += ` | @${playlist.start}`;
+        }
+
+        return {
+          label: name,
+          value: playlist.name,
+        };
+      });
+};
+
+export const getFilteredSchedules = (
+    config: Config,
+    fullySpecified: boolean = false,
+    filterActive: boolean = true
+): Option[] => {
+  return (config.schedules ?? [])
+      .filter((schedule) => !filterActive || schedule.active)
+      .map((schedule) => {
+        // Emoji for active/inactive status
+        const statusIcon = schedule.active ? "✅" : "❌";
+
+        // Base name with optional status icon
+        let name = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name;
+
+        // Additional details if fully specified
+        if (fullySpecified) {
+          if (schedule.start) name += ` | @${schedule.start}`;
+          if (schedule.days) name += ` | Days: ${schedule.days.join(",")}`;
+        }
+
+        return {
+          label: name,
+          value: `${schedule.name} ${schedule.start} ${schedule.schedule}`,
+        };
+      });
+};

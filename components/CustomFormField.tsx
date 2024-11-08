@@ -21,6 +21,7 @@ interface CustomProps {
     fieldType: FormFieldType,
     name: string,
     label?: string,
+    onValueChange?: (value: any) => void
     multiSelectOptions?: Option[],
     placeholder?: string,
     inputType?: string,
@@ -45,7 +46,6 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
         iconSrc,
         placeholder,
         inputType,
-        description,
         showTime,
         dateFormat,
         renderSkeleton,
@@ -54,29 +54,24 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
     switch (fieldType) {
         case FormFieldType.INPUT: {
             return (
-                <>
-                    <div className="flex rounded-md border border-dark-500 bg-dark-400">
-                        {iconSrc && (
-                            <Image
-                                src={iconSrc}
-                                height={24}
-                                width={24}
-                                alt={iconAlt || 'icon'}
-                                className="ml-2"
-                            />
-                        )}
-                        <FormControl className="w-full">
-                            <Input
-                                {...field}
-                                type={inputType || 'text'}
-                                placeholder={placeholder}
-                                className="shad-input border-0 text-white"/>
-                        </FormControl>
-                    </div>
-                    {description && (
-                        <FormDescription className="text-dark-700">{description}</FormDescription>
+                <div className="flex rounded-md border border-dark-500 bg-dark-400">
+                    {iconSrc && (
+                        <Image
+                            src={iconSrc}
+                            height={24}
+                            width={24}
+                            alt={iconAlt || 'icon'}
+                            className="ml-2"
+                        />
                     )}
-                </>
+                    <FormControl className="w-full">
+                        <Input
+                            {...field}
+                            type={inputType || 'text'}
+                            placeholder={placeholder}
+                            className="shad-input border-0 text-white"/>
+                    </FormControl>
+                </div>
             )
         }
         case FormFieldType.TEXTAREA: {
@@ -85,7 +80,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                     <Textarea
                         {...field}
                         placeholder={placeholder}
-                        className="shad-textArea"
+                        className="shad-textArea text-white"
                         disabled={disabled}/>
                 </FormControl>
             )
@@ -109,6 +104,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                             dateFormat={dateFormat ?? 'dd/MM/yyyy'}
                             showDateSelect={showTime ?? false}
                             timeInputLabel="Time:"
+                            className="text-white"
                             wrapperClassName="date-picker"
                         />
                     </FormControl>
@@ -118,13 +114,18 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
         case FormFieldType.SELECT: {
             return (
                 <FormControl>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                        onValueChange={(value) => {
+                            field.onChange(value);
+                            props.onValueChange && props.onValueChange(value); // Call parent's handler if passed
+                        }}
+                        defaultValue={field.value}>
                       <FormControl>
-                          <SelectTrigger className="shad-select-trigger">
+                          <SelectTrigger className="shad-select-trigger shad-input-label">
                               <SelectValue placeholder={placeholder}/>
                           </SelectTrigger>
                       </FormControl>
-                        <SelectContent className="shad-select-content">
+                        <SelectContent className="shad-select-content text-white">
                             {props.children}
                         </SelectContent>
                     </Select>
@@ -171,7 +172,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
     }
 }
 const CustomFormField = (props: CustomProps) => {
-    const {control, fieldType, name, label} = props
+    const {control, fieldType, name, label, description} = props
     return (
         <FormField
             control={control}
@@ -182,6 +183,9 @@ const CustomFormField = (props: CustomProps) => {
                         <FormLabel className="text-white">{label}</FormLabel>
                     )}
                     <RenderField field={field} props={props}/>
+                    {description && (
+                        <FormDescription className="text-dark-700">{description}</FormDescription>
+                    )}
                     <FormMessage className="shad-error"/>
                 </FormItem>
             )}
