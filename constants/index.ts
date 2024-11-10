@@ -1,15 +1,4 @@
-export const TelefynaFormDefaultValues = {
-    name: "",
-    version: "",
-    wait: 0,
-    email: "",
-    scheduleDate: new Date(Date.now()),
-    automationDisabled: false,
-    notificationsDisabled: true,
-};
-
-// Config design
-enum PlaylistType {
+export enum PlaylistType {
     ONLINE = 'ONLINE',
     LOCAL_SEQUENCED = 'LOCAL_SEQUENCED',
     LOCAL_RANDOMIZED = 'LOCAL_RANDOMIZED',
@@ -19,7 +8,7 @@ enum PlaylistType {
     LOCAL_RESUMING_ONE = 'LOCAL_RESUMING_ONE',
 }
 
-enum ResumingType {
+export enum ResumingType {
     DAILY = 'DAILY',
     WEEKLY = 'WEEKLY',
     MONTHLY = 'MONTHLY',
@@ -27,16 +16,56 @@ enum ResumingType {
     ANNUALLY = 'ANNUALLY',
 }
 
-enum SpeedType {
+export enum SpeedType {
     SLOW = 'SLOW',
     FAST = 'FAST',
     VERY_FAST = 'VERY_FAST',
 }
 
-enum LogoPosition {
+export enum LogoPosition {
     TOP = 'TOP',
     BOTTOM = 'BOTTOM',
 }
+
+export const TelefynaFormDefaultValues = {
+    name: "",
+    version: "",
+    wait: 0,
+    automationDisabled: false,
+    notificationsDisabled: true,
+};
+
+export const PlaylistFormDefaultValues = {
+    active: true,
+    playlistName: "",
+    description: "",
+    type: PlaylistType.ONLINE,
+    repeat: "",
+    emptyReplacer: 0,
+    seekTo: {
+        program: 0,
+        position: 0
+    },
+    graphics:{
+        displayLogo: false,
+        displayLiveLogo: false,
+        displayRepeatWatermark: false,
+        logoPosition: "",
+        news: {
+            newsReplays: 0,
+            speed: "FAST",
+            starts: "",
+            messages: "",
+        },
+        lowerThirds: [],
+    },
+    urlOrFolder: "",
+    playingGeneralBumpers: false,
+    usingExternalStorage: false,
+    specialBumperFolder: "",
+    color: "",
+    logo: "",
+};
 
 export const SelectPlaylistTypes = [
     {
@@ -146,6 +175,8 @@ type Graphics = {
     news: {
         replays: number;
         speed:  SpeedType;
+        starts: string,
+        messages: string
     };
     lowerThirds: any[];
     displayLiveLogo?: boolean;
@@ -181,7 +212,9 @@ export type Playlist = {
     urlOrFolder: string;
     color?: string;
     playingGeneralBumpers?: boolean;
-    start?: string;
+    specialBumperFolder?: string;
+    repeat?: ResumingType;
+    emptyReplacer?: null | number;
 };
 
 // Define the shape of the main config object
@@ -195,5 +228,4 @@ export type Config = {
     alerts?: Alerts;
     playlists?: Playlist[];
     schedules?: Schedule[];
-
 };
