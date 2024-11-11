@@ -50,7 +50,7 @@ export const PlaylistFormDefaultValues = {
         displayLogo: false,
         displayLiveLogo: false,
         displayRepeatWatermark: false,
-        logoPosition: "",
+        logoPosition: LogoPosition.TOP,
         news: {
             newsReplays: 0,
             speed: "FAST",
@@ -154,6 +154,11 @@ export const ResumeTypes = [
     {name:"Monthly", value: ResumingType.MONTHLY},
     {name:"Quarterly", value: ResumingType.QUARTERLY},
     {name:"Annually", value: ResumingType.ANNUALLY}
+]
+
+export const LogoPositionType = [
+    {name:"Top Right", value: LogoPosition.TOP},
+    {name:"Bottom Right", value: LogoPosition.BOTTOM},
 ]
 type Mailer = {
     host: string;

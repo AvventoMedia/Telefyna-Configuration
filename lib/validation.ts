@@ -1,5 +1,5 @@
 import {z} from "zod";
-import {LogoPosition, PlaylistType, ResumingType} from "@/constants";
+import {PlaylistType} from "@/constants";
 
 const SeekToSchema = z.object({
     program: z.number().min(0).optional().nullable(),

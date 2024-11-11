@@ -12,7 +12,7 @@ import React, {useEffect, useRef, useState} from "react";
 import {PlaylistFormValidation} from "@/lib/validation";
 import {
     ColorOptions,
-    LogoPosition,
+    LogoPosition, LogoPositionType,
     logoTypes, Playlist, PlaylistFormDefaultValues, PlaylistType,
     ResumeTypes, ResumingType,
     SelectPlaylistTypes, SpeedType,
@@ -56,13 +56,11 @@ const CreatePlaylistForm = () => {
             ...PlaylistFormDefaultValues
         },
     })
-    console.log("Values: ",createForm.getValues());
-    console.log("Errors: ",createForm.formState.errors);
-
+    // console.log("Values: ",createForm.getValues());
+    // console.log("Errors: ",createForm.formState.errors);
 
     function handleCreatePlaylist(data: z.infer<typeof PlaylistFormValidation>) {
-       setIsLoading(() => true)
-        console.log('Form submitted with data:', data);
+       setIsLoading(true)
         // Create new playlist object from form data
         const newPlaylist: Playlist = {
             active: data.active,
@@ -102,13 +100,14 @@ const CreatePlaylistForm = () => {
         // Retrieve current config from localStorage
         const storedConfig = getConfigJson();
 
-        // // Add new playlist to the playlists array
-        // storedConfig.playlists?.push(newPlaylist);
+        // Add new playlist to the playlists array
+        storedConfig.playlists?.push(newPlaylist);
 
-        // // Save updated config to localStorage
-        // localStorage.setItem('config', JSON.stringify(storedConfig));
+        // Save updated config to localStorage
+        modifyConfig(storedConfig);
 
         console.log('Config after adding new playlist:', storedConfig);
+        setIsLoading(false)
     }
 
     const handleTypeChange = (selectedValue: string) => {
@@ -121,6 +120,17 @@ const CreatePlaylistForm = () => {
     const streamUrlLabel = selectedPlaylistType === PlaylistType.ONLINE
         ? "Stream URL"
         : "Local folder name (separate with # to add other folders)";
+
+
+    const handleLogoChange = (selectedValue: string) => {
+        // Set the selected logo to true and others to false
+        createForm.setValue("graphics.displayLogo", selectedValue === "displayLogo");
+        createForm.setValue("graphics.displayLiveLogo", selectedValue === "displayLiveLogo");
+    };
+
+    const clearAllFields = () => {
+        createForm.reset();
+    }
 
     return (
         <Form {...createForm}>
@@ -274,7 +284,10 @@ const CreatePlaylistForm = () => {
                         renderSkeleton={(field) => (
                             <FormControl>
                                 <RadioGroup className="flex h-11 gap-6 xl:justify-between"
-                                            onValueChange={field.onChange}
+                                            onValueChange={(value) => {
+                                                field.onChange(value);
+                                                handleLogoChange(value);
+                                            }}
                                             defaultValue={field.value}>
                                     {logoTypes.map((type) => (
                                         <div key={type.value}
@@ -291,6 +304,16 @@ const CreatePlaylistForm = () => {
                             </FormControl>
                         )}
                     />
+                <CustomFormField
+                    fieldType={FormFieldType.SELECT}
+                    name="graphics.logoPosition"
+                    label="Logo Position"
+                    placeholder="Select logo position"
+                    control={createForm.control}>
+                    {LogoPositionType.map(type => (
+                        <SelectItem key={type.value} value={type.value}>{type.name}</SelectItem>
+                    ))}
+                </CustomFormField>
                     <section className="space-y-6">
                         <div className="mb-4 space-y-1">
                             <h1 className="sub-header text-white">Ticker News/Notifications Section</h1>
@@ -338,7 +361,7 @@ const CreatePlaylistForm = () => {
                     </section>
                     <LowerthirdTable/>
                     <div className="flex flex-col gap-4 xl:flex-row">
-                        <RegularButton isLoading={isLoading} className="shad-blue-btn">
+                        <RegularButton isLoading={isLoading} className="shad-blue-btn" onClick={clearAllFields}>
                             Clear
                         </RegularButton>
                         <RegularButton isLoading={isLoading} className="shad-danger-btn">
