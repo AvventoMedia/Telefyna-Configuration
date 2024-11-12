@@ -18,10 +18,10 @@ export enum FormFieldType {
     INPUT = 'input',
     TEXTAREA = 'textarea',
     CHECKBOX = 'checkbox',
-    RADIO = 'radio',
     DATE_PICKER = 'datepicker',
     SELECT= 'select',
     MULTI_SELECT= 'multiselect',
+    COMBO_BOX = 'combobox',
     SKELETON = 'skeleton',
 }
 

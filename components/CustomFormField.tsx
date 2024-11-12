@@ -1,6 +1,6 @@
 "use client"
 
-import React from 'react'
+import React, {useState} from 'react'
 import {FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {Control} from "react-hook-form";
@@ -11,10 +11,11 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import {Select, SelectContent, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Textarea} from "@/components/ui/textarea";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label"
+import {Checkbox} from "@/components/ui/checkbox";
+import {Label} from "@/components/ui/label"
 import MultipleSelector from "@/components/ui/multipleselector";
 import {Option} from "@/components/forms/DeletePlaylistScheduleForm";
+import ComboBox from "@/components/ComboBoxField";
 
 interface CustomProps {
     control: Control<any>,
@@ -22,7 +23,9 @@ interface CustomProps {
     name: string,
     label?: string,
     onValueChange?: (value: any) => void
+    onChange?: (value: any) => void
     multiSelectOptions?: Option[],
+    selectOptions?: any[],
     placeholder?: string,
     inputType?: string,
     description?: string,
@@ -38,6 +41,7 @@ interface CustomProps {
 
 
 const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
+    const [selectedValue, setValue] = useState(field.value);
     const {
         fieldType,
         name,
@@ -116,6 +120,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
             return (
                 <FormControl>
                     <Select
+                        {...field}
                         onValueChange={(value) => {
                             field.onChange(value);
                             props.onValueChange && props.onValueChange(value); // Call parent's handler if passed
@@ -135,7 +140,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
         }
         case FormFieldType.MULTI_SELECT: {
             return (
-                <FormControl>
+                <FormControl className="w-full">
                     <MultipleSelector
                         {...field}
                         defaultOptions={multiSelectOptions}
@@ -166,6 +171,22 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
         }
         case FormFieldType.SKELETON: {
             return renderSkeleton ? renderSkeleton(field) : <></>
+        }
+        case FormFieldType.COMBO_BOX: {
+            return (
+                <FormControl className="w-full">
+                    <ComboBox
+                        options={props.selectOptions ?? []}
+                        value={selectedValue}
+                        onChange={(value) => {
+                            setValue(value);
+                            field.onChange(value);
+                            props.onChange && props.onChange(value);
+                        }}
+                        placeholder={placeholder}
+                    />
+                </FormControl>
+            )
         }
         default: {
             break;

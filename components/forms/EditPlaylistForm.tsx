@@ -18,7 +18,7 @@ import {
     SelectPlaylistTypes, SpeedType,
     SpeedTypes,
 } from "@/constants";
-import {getConfigJson, modifyConfig} from "@/lib/utils";
+import {getConfigJson, getFilteredPlaylists, modifyConfig} from "@/lib/utils";
 import RegularButton from "@/components/RegularButton";
 import {SelectItem} from "@/components/ui/select";
 import { RadioGroup } from "@radix-ui/react-radio-group"
@@ -26,11 +26,14 @@ import {RadioGroupItem} from "@/components/ui/radio-group";
 import {Label} from "@/components/ui/label";
 import LowerthirdTable from "@/components/LowerthirdTable";
 import {FormFieldType} from "@/components/forms/InitialForm";
+import {Option} from "@/components/ui/multipleselector";
 
-const CreatePlaylistForm = () => {
+const EditPlaylistForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [description, setDescription] = useState(SelectPlaylistTypes[1].description);
     const [selectedPlaylistType, setSelectedPlaylistType] = useState<string>("");
+    const getPlaylists = getFilteredPlaylists(getConfigJson() ?? {playlists: []}, true, true);
+    const [selectedPlaylist, setSelectedPlaylist] = useState<Option | null>(null);
 
     const showSeekToFieldTypes = [
         PlaylistType.LOCAL_RESUMING,
@@ -39,32 +42,34 @@ const CreatePlaylistForm = () => {
         PlaylistType.LOCAL_RESUMING_SAME
     ];
 
+    interface PlaylistTypeCheck {
+        type: PlaylistType;
+    }
+
     const showBumperFieldTypes = [
         PlaylistType.LOCAL_SEQUENCED,
         PlaylistType.LOCAL_RANDOMIZED,
     ];
+
     const createForm = useForm<z.infer<typeof PlaylistFormValidation>>({
         resolver: zodResolver(PlaylistFormValidation),
         defaultValues: {
             ...PlaylistFormDefaultValues
         },
     })
-    // console.log("Values: ",createForm.getValues());
-    // console.log("Errors: ",createForm.formState.errors);
 
-    function handleCreatePlaylist(data: z.infer<typeof PlaylistFormValidation>) {
-       setIsLoading(true)
-        // Create new playlist object from form data
-        const newPlaylist: Playlist = {
+
+    function handleUpdatePlaylist(data: z.infer<typeof PlaylistFormValidation>) {
+        setIsLoading(true);
+
+        const updatedPlaylist: Playlist = {
             active: data.active,
-            type: data.type as PlaylistType,
+            type: data.type.trim() as PlaylistType,
             usingExternalStorage: data.usingExternalStorage ?? false,
-            // seekTo field
             seekTo: {
                 program: data.seekTo?.program ?? 0,
-                position: data.seekTo?.position ?? 0
+                position: data.seekTo?.position ?? 0,
             },
-            // Graphics field
             graphics: {
                 displayLogo: data.graphics?.displayLogo ?? false,
                 logoPosition: data.graphics?.logoPosition as LogoPosition,
@@ -78,44 +83,58 @@ const CreatePlaylistForm = () => {
                 displayLiveLogo: data.graphics?.displayLiveLogo ?? false,
                 displayRepeatWatermark: data.graphics?.displayRepeatWatermark ?? false,
             },
-
-            name: data.playlistName,
-            description: data.description,
-            urlOrFolder: data.urlOrFolder,
-            color: data.color,
+            name: data.playlistName.trim(),
+            description: data.description?.trim(),
+            urlOrFolder: data.urlOrFolder.trim(),
+            color: data.color?.trim(),
             playingGeneralBumpers: data.playingGeneralBumpers ?? false,
             repeat: data.repeat as ResumingType,
             emptyReplacer: data.emptyReplacer ?? null,
-            specialBumperFolder: data.specialBumperFolder ?? ""
+            specialBumperFolder: data.specialBumperFolder?.trim() ?? "",
         };
 
-
-        // Retrieve current config from localStorage
         const storedConfig = getConfigJson();
 
-        // Add new playlist to the playlists array
-        storedConfig.playlists?.push(newPlaylist);
+        // Locate the playlist by name or other identifier
+        const playlistIndex = storedConfig.playlists?.findIndex(
+            (playlist: Playlist) => playlist.name === selectedPlaylist?.value
+        );
 
-        // Save updated config to localStorage
-        modifyConfig(storedConfig);
+        if (playlistIndex !== undefined && playlistIndex > -1) {
+            // Update the selected playlist
+            storedConfig.playlists[playlistIndex] = updatedPlaylist;
 
-        console.log('Config after adding new playlist:', storedConfig);
-        setIsLoading(false)
+            // Save the updated config
+            modifyConfig(storedConfig);
+
+            console.log('Config after updating playlist:', storedConfig);
+        } else {
+            console.error("Playlist not found for updating.");
+        }
+
+        setIsLoading(false);
     }
+
 
     const handleTypeChange = (selectedValue: string) => {
         const selectedType = SelectPlaylistTypes.find((type) => type.value === selectedValue);
         setSelectedPlaylistType(selectedType ? selectedType.value as PlaylistType :"");
         setDescription(selectedType ? selectedType.description : "");
+        createForm.setValue("type", selectedType ? selectedType.value as PlaylistType : PlaylistType.ONLINE);
     };
 
-    // Determine the label text based on the playlist type
-    const streamUrlLabel = selectedPlaylistType === PlaylistType.ONLINE
+    function isPlaylist(obj: any): obj is PlaylistTypeCheck {
+        return obj && typeof obj === 'object' && 'type' in obj;
+    }
+
+    // Use the type guard in your code
+    const streamUrlLabel = selectedPlaylist && isPlaylist(selectedPlaylist.playlist) && selectedPlaylist.playlist.type === PlaylistType.ONLINE
         ? "Stream URL"
         : "Local folder name (separate with # to add other folders)";
 
 
     const handleLogoChange = (selectedValue: string) => {
+        console.log("Selected playlist logo:", selectedValue);
         // Set the selected logo to true and others to false
         createForm.setValue("graphics.displayLogo", selectedValue === "displayLogo");
         createForm.setValue("graphics.displayLiveLogo", selectedValue === "displayLiveLogo");
@@ -125,14 +144,72 @@ const CreatePlaylistForm = () => {
         createForm.reset();
     }
 
+    const handlePlaylistSelection = (selectedValue: string) => {
+        const selectedPlaylistData = getPlaylists.find((playlist) => playlist.value === selectedValue);
+console.log('Selected playlist data:', selectedPlaylistData , selectedValue, getPlaylists);
+        if (selectedPlaylistData) {
+            setSelectedPlaylist(selectedPlaylistData as Option);
+
+            // Fetch playlist data based on selection
+            const playlistData = getConfigJson()?.playlists.find(
+                (playlist :Playlist) => playlist.name === selectedPlaylistData.value
+            );
+
+            // Update form fields with selected playlist data
+            if (playlistData) {
+                setSelectedPlaylistType(playlistData.type as string);
+                handleTypeChange(playlistData.type as string);
+
+                createForm.reset({
+                    active: playlistData.active,
+                    playlistName: playlistData.name,
+                    type: playlistData.type as PlaylistType,
+                    color: playlistData.color,
+                    description: playlistData.description,
+                    urlOrFolder: playlistData.urlOrFolder,
+                    playingGeneralBumpers: playlistData.playingGeneralBumpers,
+                    repeat: playlistData.repeat,
+                    emptyReplacer: playlistData.emptyReplacer,
+                    specialBumperFolder: playlistData.specialBumperFolder,
+                    usingExternalStorage: playlistData.usingExternalStorage,
+                    seekTo: {
+                        program: playlistData.seekTo.program,
+                        position: playlistData.seekTo.position
+                    },
+                    graphics: {
+                        displayLogo: playlistData.graphics.displayLogo,
+                        logoPosition: playlistData.graphics.logoPosition,
+                        news: {
+                            newsReplays: playlistData.graphics.news.replays,
+                            speed: playlistData.graphics.news.speed,
+                            starts: playlistData.graphics.news.starts,
+                            messages: playlistData.graphics.news.messages
+                        },
+                        lowerThirds: playlistData.graphics.lowerThirds,
+                        displayLiveLogo: playlistData.graphics.displayLiveLogo,
+                        displayRepeatWatermark: playlistData.graphics.displayRepeatWatermark
+                    },
+                });
+            }
+        }
+    };
+
     return (
         <Form {...createForm}>
-            <form className="space-y-6 flex-1" onSubmit={createForm.handleSubmit(handleCreatePlaylist)}>
+            <form className="space-y-6 flex-1" onSubmit={createForm.handleSubmit(handleUpdatePlaylist)}>
                 <section className="mb-12 space-y-1">
-                    <p className="text-dark-700">Create a 📜</p>
-                    <h1 className="header text-white">New Playlist</h1>
+                    <p className="text-dark-700">Edit an 📜</p>
+                    <h1 className="header text-white">Existing Playlist</h1>
                 </section>
 
+                <CustomFormField
+                    fieldType={FormFieldType.COMBO_BOX}
+                    name="select"
+                    label="Select Playlist to edit"
+                    placeholder="Select Playlist to edit"
+                    selectOptions={getPlaylists}
+                    onChange={handlePlaylistSelection}
+                    control={createForm.control}/>
                 <CustomFormField
                     fieldType={FormFieldType.CHECKBOX}
                     name="active"
@@ -172,6 +249,7 @@ const CreatePlaylistForm = () => {
                         name="repeat"
                         label="Resuming Period"
                         placeholder="Select Resuming Period"
+                        onValueChange={handleTypeChange}
                         control={createForm.control}>
                         {ResumeTypes.map(type => (
                             <SelectItem key={type.value} value={type.value}>{type.name}</SelectItem>
@@ -277,11 +355,18 @@ const CreatePlaylistForm = () => {
                         renderSkeleton={(field) => (
                             <FormControl>
                                 <RadioGroup className="flex h-11 gap-6 xl:justify-between"
+                                            {...field}
                                             onValueChange={(value) => {
                                                 field.onChange(value);
                                                 handleLogoChange(value);
                                             }}
-                                            defaultValue={field.value}>
+                                            value={
+                                                createForm.watch("graphics.displayLogo")
+                                                    ? "displayLogo"
+                                                    : createForm.watch("graphics.displayLiveLogo")
+                                                        ? "displayLiveLogo"
+                                                        : "none"
+                                            }>
                                     {logoTypes.map((type) => (
                                         <div key={type.value}
                                              className="radio-group">
@@ -368,4 +453,4 @@ const CreatePlaylistForm = () => {
         </Form>
 )
 }
-export default CreatePlaylistForm;
+export default EditPlaylistForm;

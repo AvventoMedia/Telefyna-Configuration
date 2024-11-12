@@ -3,6 +3,7 @@ import InitialForm from "@/components/forms/InitialForm";
 import {Toaster} from "sonner";
 import DeletePlaylistScheduleForm from "@/components/forms/DeletePlaylistScheduleForm";
 import CreatePlaylistForm from "@/components/forms/CreatePlaylistForm";
+import EditPlaylistForm from "@/components/forms/EditPlaylistForm";
 
 export default function Home() {
   return (
@@ -20,7 +21,8 @@ export default function Home() {
               </div>
               {/*<InitialForm/>*/}
               {/*<DeletePlaylistScheduleForm />*/}
-              <CreatePlaylistForm />
+              {/*<CreatePlaylistForm />*/}
+              <EditPlaylistForm />
               <div className="text-14-regular mt-20 flex justify-between">
                   <p className="justify-items-end text-dark-600 xl:text-left">
                       @2024 TelefynaConfiguration

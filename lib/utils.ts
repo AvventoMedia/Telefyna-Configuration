@@ -126,7 +126,9 @@ export const getFilteredPlaylists = (
     filterActive: boolean = true
 ): Option[] => {
   return (config.playlists ?? [])
+      .map((playlist, index) => ({ ...playlist, index }))
       .filter((playlist) => !filterActive || playlist.active)
+      .sort((a, b) => a.index - b.index) // Sorting by index number
       .map((playlist, index) => {
         // Emoji for active/inactive status
         const statusIcon = playlist.active ? "✅" : "❌";
@@ -137,15 +139,16 @@ export const getFilteredPlaylists = (
         // Additional details if fully specified
         if (fullySpecified) {
           name += ` #${index + 1}`;
-          if (playlist.start) name += ` | @${playlist.start}`;
         }
 
         return {
           label: name,
-          value: playlist.name,
+          value: playlist.name.trim(),
+          playlist: playlist,
         };
       });
 };
+
 
 export const getFilteredSchedules = (
     config: Config,
