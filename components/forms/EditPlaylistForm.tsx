@@ -189,6 +189,7 @@ console.log('Selected playlist data:', selectedPlaylistData , selectedValue, get
                         displayLiveLogo: playlistData.graphics.displayLiveLogo,
                         displayRepeatWatermark: playlistData.graphics.displayRepeatWatermark
                     },
+                    schedules: playlistData.schedules
                 });
             }
         }

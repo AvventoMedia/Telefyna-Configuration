@@ -6,7 +6,6 @@ import {Input} from "@/components/ui/input";
 import {Control} from "react-hook-form";
 import {FormFieldType} from "@/components/forms/InitialForm";
 import Image from "next/image";
-import DatePicker from "react-datepicker";
 
 import "react-datepicker/dist/react-datepicker.css";
 import {Select, SelectContent, SelectTrigger, SelectValue} from "@/components/ui/select";
@@ -16,6 +15,9 @@ import {Label} from "@/components/ui/label"
 import MultipleSelector from "@/components/ui/multipleselector";
 import {Option} from "@/components/forms/DeletePlaylistScheduleForm";
 import ComboBox from "@/components/ComboBoxField";
+import DatePicker from "react-multi-date-picker";
+import "react-datepicker/dist/react-datepicker.css";
+import DatePanel from "react-multi-date-picker/plugins/date_panel";
 
 interface CustomProps {
     control: Control<any>,
@@ -25,6 +27,7 @@ interface CustomProps {
     onValueChange?: (value: any) => void
     onChange?: (value: any) => void
     multiSelectOptions?: Option[],
+    badgeClassName?: string,
     selectOptions?: any[],
     placeholder?: string,
     inputType?: string,
@@ -98,19 +101,27 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                         height={24}
                         width={24}
                         alt='calender'
-                        className="ml-2"
+                        className="ml-2 mr-2"
                     />
-                    <FormControl className="w-full">
+                    <FormControl>
                         <DatePicker
-                            {...field}
-                            placeholderText="Select date"
-                            selected={field.value}
-                            onChange={(date) => field.onChange(date)}
-                            dateFormat={dateFormat ?? 'dd/MM/yyyy'}
-                            showDateSelect={showTime ?? false}
-                            timeInputLabel="Time:"
-                            className="text-white"
-                            wrapperClassName="date-picker"
+                            multiple
+                            value={field.value || []}
+                            onChange={(date) => {
+                                // Update the field value with an array of selected dates
+                                console.log("Selected date(s):", date);
+                                field.onChange(date);
+                            }}
+                            sort
+                            plugins={[<DatePanel />]}
+                            format={dateFormat ?? 'DD-MM-YYYY'}
+                            style={{
+                                backgroundColor: "transparent",
+                                border: "0px solid #444",
+                                borderRadius: "1px",
+                                padding: "9px",
+                            }}
+                            inputClass="w-full shad-input-label"
                         />
                     </FormControl>
                 </div>
@@ -146,6 +157,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                         defaultOptions={multiSelectOptions}
                         hidePlaceholderWhenSelected
                         placeholder={placeholder}
+                        badgeClassName={props.badgeClassName}
                         emptyIndicator={
                             <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
                                 no results found.

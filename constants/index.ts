@@ -1,3 +1,5 @@
+import {Option} from "@/components/forms/DeletePlaylistScheduleForm";
+
 export enum PlaylistType {
     ONLINE = 'ONLINE',
     LOCAL_SEQUENCED = 'LOCAL_SEQUENCED',
@@ -65,6 +67,32 @@ export const PlaylistFormDefaultValues = {
     specialBumperFolder: "",
     color: "",
     logo: "",
+    schedules: {
+        schedule: "",
+        active: true,
+        name: "",
+        graphics: {
+            displayLogo: false,
+            displayLiveLogo: false,
+            displayRepeatWatermark: false,
+            logoPosition: LogoPosition.TOP,
+            news: {
+                newsReplays: 0,
+                speed: "FAST",
+                starts: "",
+                messages: "",
+            },
+            lowerThirds: [],
+        },
+        type: PlaylistType.ONLINE,
+        start: "",
+        color: "",
+        days: [],
+        seekTo: {
+            program: 0,
+            position: 0
+        }
+    },
 };
 
 export const SelectPlaylistTypes = [
@@ -160,6 +188,18 @@ export const LogoPositionType = [
     {name:"Top Right", value: LogoPosition.TOP},
     {name:"Bottom Right", value: LogoPosition.BOTTOM},
 ]
+
+export const Days :Option[] = [
+    {label:"Sunday", value: "1"},
+    {label:"Monday", value: "2"},
+    {label:"Tuesday", value: "3"},
+    {label:"Wednesday", value: "4"},
+    {label:"Thursday", value: "5"},
+    {label: "Friday", value: "6"},
+    {label: "Saturday", value: "7"},
+
+]
+
 type Mailer = {
     host: string;
     port: number;
@@ -190,13 +230,14 @@ type Graphics = {
 
 export type Schedule = {
     schedule: number;
-    start: string;
-    days: number[];
     name: string;
-    color: string;
     active: boolean;
-    type: PlaylistType;
     graphics: Graphics;
+    type: PlaylistType;
+    start: string;
+    color: string;
+    days: number[];
+    seekTo: SeekTo;
 };
 
 // Define the shape of the "seekTo" section
@@ -219,6 +260,7 @@ export type Playlist = {
     playingGeneralBumpers?: boolean;
     specialBumperFolder?: string;
     repeat?: ResumingType;
+    schedules?: Schedule[];
     emptyReplacer?: null | number;
 };
 
@@ -232,5 +274,4 @@ export type Config = {
     wait: number;
     alerts?: Alerts;
     playlists?: Playlist[];
-    schedules?: Schedule[];
 };

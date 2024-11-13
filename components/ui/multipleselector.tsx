@@ -539,7 +539,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                 <div className="relative">
                     {open && (
                         <CommandList
-                            className="bg-white absolute top-1 z-10 w-full rounded-md border bg-popover text-popover-foreground shadow-md outline-none animate-in"
+                            className="bg-dark-400 absolute top-1 z-10 w-full rounded-md border text-popover-foreground shadow-md outline-none animate-in"
                             onMouseLeave={() => {
                                 setOnScrollbar(false);
                             }}
@@ -558,7 +558,7 @@ const MultipleSelector = React.forwardRef<MultipleSelectorRef, MultipleSelectorP
                                     {CreatableItem()}
                                     {!selectFirstItem && <CommandItem value="-" className="hidden" />}
                                     {Object.entries(selectables).map(([key, dropdowns]) => (
-                                        <CommandGroup key={key} heading={key} className="bg-white h-full overflow-auto">
+                                        <CommandGroup key={key} heading={key} className="bg-dark-400 shad-input-label h-full overflow-auto">
                                             <>
                                                 {dropdowns.map((option) => {
                                                     return (

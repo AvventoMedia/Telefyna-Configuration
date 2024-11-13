@@ -27,6 +27,20 @@ const GraphicsSchema = z.object({
     })).optional().nullable(),
 });
 
+export const ScheduleSchema = z.object({
+    schedule: z.string().optional().nullable(),
+    playlistName: z.string().min(2,
+        { message: "Playlist name must be at least 2 characters." }),
+    active: z.boolean(),
+    graphics: GraphicsSchema,
+    type: z.nativeEnum(PlaylistType,
+        { message: "Please select a playlist type." }),
+    start: z.string().optional().nullable(),
+    color: z.string().optional().nullable(),
+    days: z.array(z.number().int()).optional().nullable(),
+    seekTo: SeekToSchema
+});
+
 export const PlaylistFormValidation = z.object({
     active: z.boolean(),
     type: z.nativeEnum(PlaylistType,
@@ -49,6 +63,7 @@ export const PlaylistFormValidation = z.object({
     repeat: z.string().optional(),
     emptyReplacer: z.number().int().optional(),
     specialBumperFolder: z.string().optional().nullable(),
+    schedules: ScheduleSchema
 });
 
 export const TelefynaFormValidation = z.object({

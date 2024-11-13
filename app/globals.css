@@ -282,62 +282,87 @@
 }
 
 /* =====  REACT-DATEPICKER OVERRIDES */
-.react-datepicker-wrapper.date-picker {
+.rmdp-container {
   display: flex;
   align-items: center;
+  width: 100%;
 }
 
-.react-datepicker,
-.react-datepicker__time,
-.react-datepicker__header,
-.react-datepicker__current-month,
-.react-datepicker__day-name,
-.react-datepicker__day,
-.react-datepicker-time__header {
+.rmdp-wrapper,.rmdp-month-picker,.rmdp-year-picker{
   background-color: #1a1d21 !important;
-  border-color: #363a3d !important;
+}
+
+.rmdp-arrow-container {
+  color:#1a1d21 !important;
+}
+
+/* Calendar Header */
+.rmdp-header,
+.rmdp-week-day,
+.rmdp-day-picker .rmdp-arrow,
+.rmdp-selected span,
+.rmdp-month-picker,
+.rmdp-year-picker,
+.rmdp-week span,
+.rmdp-day span {
   color: #abb8c4 !important;
 }
 
-.react-datepicker__current-month,
-.react-datepicker__day-name,
-.react-datepicker-time__header {
+.rmdp-header span, .rmdp-panel-header{
   color: #ffffff !important;
 }
 
-.react-datepicker__triangle {
-  fill: #1a1d21 !important;
-  color: #1a1d21 !important;
-  stroke: #1a1d21 !important;
+.rmdp-panel-body li,.rmdp-panel-body .b-deselect{
+  background-color: rgb(21 128 61) !important;
 }
 
-.react-datepicker__time-list-item:hover {
-  background-color: #363a3d !important;
-}
 
-.react-datepicker__input-container input {
-  background-color: #1a1d21 !important;
-  width: 100%;
-  outline: none;
-}
-
-.react-datepicker__day--selected {
-  background-color: #24ae7c !important;
+/* Selected Day */
+.rmdp-selected span {
+  background-color: rgb(21 128 61) !important;
   color: #ffffff !important;
   border-radius: 4px;
 }
 
-.react-datepicker__time-list-item--selected {
-  background-color: #24ae7c !important;
+/* Day Hover */
+.rmdp-day span:hover {
+  background-color: #363a3d !important;
 }
 
-.react-datepicker__time-container {
+/* Month & Year Dropdowns */
+.rmdp-header select {
+  background-color: #1a1d21 !important;
+  color: #abb8c4 !important;
+  border-color: #363a3d !important;
+}
+
+/* Input */
+.rmdp-input {
+  background-color: #1a1d21 !important;
+  color: #abb8c4 !important;
+  width: 100%;
+  outline: none;
+}
+
+/* Time Picker */
+.rmdp-time-picker .rmdp-list-item:hover {
+  background-color: #363a3d !important;
+}
+
+.rmdp-time-picker .rmdp-list-item--selected {
+  background-color: rgb(21 128 61) !important;
+  color: #abb8c4 !important;
+}
+
+/* Scrollbar in Time Picker */
+.rmdp-time-picker {
   border-left: 1px solid #363a3d !important;
 }
 
-.react-datepicker__time-list-item {
-  display: flex !important;
-  align-items: center !important;
+.rmdp-time-picker .rmdp-list-item {
+  display: flex;
+  align-items: center;
+  color: #abb8c4 !important;
 }
 
 /* =====  REACT PHONE NUMBER INPUT OVERRIDES */

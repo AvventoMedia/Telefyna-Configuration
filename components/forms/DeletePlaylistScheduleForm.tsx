@@ -173,6 +173,7 @@ const DeletePlaylistScheduleForm = () => {
                             label="Select Playlists(s) | Schedule(s)"
                             placeholder="Select to delete"
                             multiSelectOptions={options}
+                            badgeClassName="bg-red-700"
                             control={form.control}
                         />
                     ) : (

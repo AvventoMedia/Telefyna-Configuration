@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {Config} from "@/constants";
+import {Config, Playlist, Schedule} from "@/constants";
 import {Option} from "@/components/forms/DeletePlaylistScheduleForm";
 
 export function cn(...inputs: ClassValue[]) {
@@ -155,9 +155,9 @@ export const getFilteredSchedules = (
     fullySpecified: boolean = false,
     filterActive: boolean = true
 ): Option[] => {
-  return (config.schedules ?? [])
-      .filter((schedule) => !filterActive || schedule.active)
-      .map((schedule) => {
+  return (config.playlists?.schedules ?? [] as Playlist[])
+      .filter((schedule: { active: any; }) => !filterActive || schedule.active)
+      .map((schedule: { active: any; name: any; start: any; days: any[]; schedule: any; }) => {
         // Emoji for active/inactive status
         const statusIcon = schedule.active ? "✅" : "❌";
 
@@ -176,3 +176,15 @@ export const getFilteredSchedules = (
         };
       });
 };
+
+export const generateTimeSlots =() => {
+  const timeSlots = [];
+
+  for (let hour = 0; hour < 24; hour++) {
+    const hourString = hour < 10 ? `0${hour}` : `${hour}`;
+    timeSlots.push({ label: `${hourString}:00`, value: `${hourString}:00` });
+    timeSlots.push({ label: `${hourString}:30`, value: `${hourString}:30` });
+  }
+
+  return timeSlots;
+}
