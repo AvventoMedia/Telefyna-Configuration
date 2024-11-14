@@ -154,7 +154,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                 <FormControl className="w-full">
                     <MultipleSelector
                         {...field}
-                        defaultOptions={multiSelectOptions}
+                        options={multiSelectOptions}
                         hidePlaceholderWhenSelected
                         placeholder={placeholder}
                         badgeClassName={props.badgeClassName}

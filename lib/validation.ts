@@ -29,16 +29,14 @@ const GraphicsSchema = z.object({
 
 export const ScheduleSchema = z.object({
     schedule: z.string().optional().nullable(),
-    playlistName: z.string().min(2,
-        { message: "Playlist name must be at least 2 characters." }),
     active: z.boolean(),
     graphics: GraphicsSchema,
-    type: z.nativeEnum(PlaylistType,
-        { message: "Please select a playlist type." }),
     start: z.string().optional().nullable(),
-    color: z.string().optional().nullable(),
-    days: z.array(z.number().int()).optional().nullable(),
-    seekTo: SeekToSchema
+    days: z.array(z.object({ label: z.string().optional(),
+        value: z.string().optional() })).optional().nullable(),
+    dates: z.array(z.object({ label: z.string().optional(),
+        value: z.string().optional() })).optional().nullable(),
+
 });
 
 export const PlaylistFormValidation = z.object({

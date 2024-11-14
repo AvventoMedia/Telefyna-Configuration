@@ -144,6 +144,7 @@ export const getFilteredPlaylists = (
         return {
           label: name,
           value: playlist.name.trim(),
+          schedule: playlist.schedules,
           playlist: playlist,
         };
       });
@@ -155,27 +156,31 @@ export const getFilteredSchedules = (
     fullySpecified: boolean = false,
     filterActive: boolean = true
 ): Option[] => {
-  return (config.playlists?.schedules ?? [] as Playlist[])
-      .filter((schedule: { active: any; }) => !filterActive || schedule.active)
-      .map((schedule: { active: any; name: any; start: any; days: any[]; schedule: any; }) => {
-        // Emoji for active/inactive status
-        const statusIcon = schedule.active ? "✅" : "❌";
+  return (config.playlists ?? [])
+      .flatMap((playlist) =>
+          Array.isArray(playlist.schedules) // Ensure schedules is an array before proceeding
+              ? playlist.schedules
+                  .filter((schedule: Schedule) => !filterActive || schedule.active) // Filter schedules if active
+                  .map((schedule: Schedule) => {
+                    const statusIcon = schedule.active ? "✅" : "❌"; // Status icon for active/inactive
 
-        // Base name with optional status icon
-        let name = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name;
+                    let name = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name; // Playlist name with status icon
 
-        // Additional details if fully specified
-        if (fullySpecified) {
-          if (schedule.start) name += ` | @${schedule.start}`;
-          if (schedule.days) name += ` | Days: ${schedule.days.join(",")}`;
-        }
+                    // Additional details if fully specified
+                    if (fullySpecified) {
+                      if (schedule.start) name += ` | @${schedule.start}`;
+                      if (schedule.days) name += ` | Days: ${schedule.days.join(",")}`;
+                    }
 
-        return {
-          label: name,
-          value: `${schedule.name} ${schedule.start} ${schedule.schedule}`,
-        };
-      });
+                    return {
+                      label: name,
+                      value: `${schedule.name} ${schedule.start} ${schedule.schedule}`,
+                    };
+                  })
+              : [] // Return empty array if schedules is not an array
+      );
 };
+
 
 export const generateTimeSlots =() => {
   const timeSlots = [];

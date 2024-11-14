@@ -70,7 +70,6 @@ export const PlaylistFormDefaultValues = {
     schedules: {
         schedule: "",
         active: true,
-        name: "",
         graphics: {
             displayLogo: false,
             displayLiveLogo: false,
@@ -84,14 +83,9 @@ export const PlaylistFormDefaultValues = {
             },
             lowerThirds: [],
         },
-        type: PlaylistType.ONLINE,
         start: "",
-        color: "",
         days: [],
-        seekTo: {
-            program: 0,
-            position: 0
-        }
+        dates: [],
     },
 };
 

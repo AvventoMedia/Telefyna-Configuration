@@ -8,17 +8,15 @@ import {
 } from "@/components/ui/form"
 import CustomFormField from "@/components/CustomFormField";
 import ExportButton from "@/components/ExportButton";
-import React, {useEffect, useRef, useState} from "react";
-import {PlaylistFormValidation} from "@/lib/validation";
+import React, {useState} from "react";
+import {ScheduleSchema} from "@/lib/validation";
 import {
     Days,
-    LogoPosition, LogoPositionType,
+    LogoPositionType,
     logoTypes, Playlist, PlaylistFormDefaultValues, PlaylistType,
-    ResumingType,
-    SpeedType,
     SpeedTypes,
 } from "@/constants";
-import {generateTimeSlots, getConfigJson, getFilteredPlaylists, modifyConfig} from "@/lib/utils";
+import {generateTimeSlots, getConfigJson, getFilteredPlaylists, getFilteredSchedules, modifyConfig} from "@/lib/utils";
 import RegularButton from "@/components/RegularButton";
 import {SelectItem} from "@/components/ui/select";
 import { RadioGroup } from "@radix-ui/react-radio-group"
@@ -31,60 +29,91 @@ import {Option} from "@/components/ui/multipleselector";
 const SchedulePlaylistForm = () => {
     const [isLoading, setIsLoading] = useState(false);
     const getPlaylists = getFilteredPlaylists(getConfigJson() ?? {playlists: []}, true, true);
+    const getSchedules =  getFilteredSchedules(getConfigJson() ?? {playlists: []}, true, false);
     const [selectedPlaylist, setSelectedPlaylist] = useState<Option | null>(null);
+    const [selectedSchedule, setSelectedSchedule] = useState<Option | null>(null);
     const timeSlotsArray = generateTimeSlots() || [];
+    const [fieldPrefix, setFieldPrefix] = useState("");
 
-    const createForm = useForm<z.infer<typeof PlaylistFormValidation>>({
-        resolver: zodResolver(PlaylistFormValidation),
+    const scheduleForm = useForm<z.infer<typeof ScheduleSchema>>({
+        resolver: zodResolver(ScheduleSchema),
         defaultValues: {
-            ...PlaylistFormDefaultValues
+            ...PlaylistFormDefaultValues.schedules
         },
     })
 
-
-    function handleUpdatePlaylist(data: z.infer<typeof PlaylistFormValidation>) {
+    function handleUpdateSchedule(data: z.infer<typeof ScheduleSchema>) {
         setIsLoading(true);
 
-        const updatedPlaylist: Playlist = {
-            active: data.active,
-            type: data.type.trim() as PlaylistType,
-            usingExternalStorage: data.usingExternalStorage ?? false,
-            seekTo: {
-                program: data.seekTo?.program ?? 0,
-                position: data.seekTo?.position ?? 0,
-            },
-            graphics: {
-                displayLogo: data.graphics?.displayLogo ?? false,
-                logoPosition: data.graphics?.logoPosition as LogoPosition,
-                news: {
-                    replays: data.graphics?.news?.newsReplays ?? 0,
-                    speed: data.graphics?.news?.speed as SpeedType,
-                    starts: data.graphics?.news?.starts ?? "",
-                    messages: data.graphics?.news?.messages ?? "",
-                },
-                lowerThirds: data.graphics?.lowerThirds ?? [],
-                displayLiveLogo: data.graphics?.displayLiveLogo ?? false,
-                displayRepeatWatermark: data.graphics?.displayRepeatWatermark ?? false,
-            },
-            name: data.playlistName.trim(),
-            description: data.description?.trim(),
-            urlOrFolder: data.urlOrFolder.trim(),
-            color: data.color?.trim(),
-            playingGeneralBumpers: data.playingGeneralBumpers ?? false,
-            repeat: data.repeat as ResumingType,
-            emptyReplacer: data.emptyReplacer ?? null,
-            specialBumperFolder: data.specialBumperFolder?.trim() ?? "",
-        };
-
         const storedConfig = getConfigJson();
-
-        // Locate the playlist by name or other identifier
         const playlistIndex = storedConfig.playlists?.findIndex(
-            (playlist: Playlist) => playlist.name === selectedPlaylist?.value
+            (playlist: Playlist) => playlist.name === (selectedSchedule ? selectedSchedule.name : selectedPlaylist?.value)
         );
 
         if (playlistIndex !== undefined && playlistIndex > -1) {
-            // Update the selected playlist
+            const currentPlaylist = storedConfig.playlists[playlistIndex];
+
+            // Determine if a schedule is selected or if we need to create a new one
+            let updatedSchedule = null;
+            const days = data.dates?.map(day => day.value);
+            console.log("days: ", days)
+            if (selectedSchedule) {
+                // If a schedule is selected, update it
+                updatedSchedule = {
+                    active: data.active ?? currentPlaylist.schedules.active,
+                    name: currentPlaylist.name,
+                    days: days ?? currentPlaylist.schedules.days,
+                    start: data.start ?? currentPlaylist.schedules.start,
+                    dates: data.dates ?? currentPlaylist.schedules.dates,
+                    type: currentPlaylist.type,
+                    color: currentPlaylist.color,
+                    seekTo: currentPlaylist.seekTo,
+                    graphics: {
+                        displayLogo: data.graphics?.displayLogo ?? currentPlaylist.schedules.graphics.displayLogo,
+                        displayLiveLogo: data.graphics?.displayLiveLogo ?? currentPlaylist.schedules.graphics.displayLiveLogo,
+                        news: {
+                            replays: data.graphics?.news?.newsReplays ?? currentPlaylist.schedules.graphics.news.replays,
+                            speed: data.graphics?.news?.speed ?? currentPlaylist.schedules.graphics.news.speed,
+                            starts: data.graphics?.news?.starts ?? currentPlaylist.schedules.graphics.news.starts,
+                            messages: data.graphics?.news?.messages ?? currentPlaylist.schedules.graphics.news.messages,
+                        },
+                        lowerThirds: data.graphics?.lowerThirds ?? currentPlaylist.schedules.graphics.lowerThirds,
+                        displayRepeatWatermark: data.graphics?.displayRepeatWatermark ?? currentPlaylist.schedules.graphics.displayRepeatWatermark,
+                    }
+                };
+            } else {
+                // If no schedule is selected, create a new one
+                updatedSchedule = {
+                    active: data.active,
+                    name: currentPlaylist.name,
+                    days: days,
+                    start: data.start,
+                    dates: data.dates,
+                    type: currentPlaylist.type,
+                    color: currentPlaylist.color,
+                    seekTo: currentPlaylist.seekTo,
+                    graphics: {
+                        displayLogo: data.graphics?.displayLogo ?? false,
+                        displayLiveLogo: data.graphics?.displayLiveLogo ?? false,
+                        news: {
+                            replays: data.graphics?.news?.newsReplays ?? 0,
+                            speed: data.graphics?.news?.speed ?? "FAST",
+                            starts: data.graphics?.news?.starts ?? "",
+                            messages: data.graphics?.news?.messages ?? "",
+                        },
+                        lowerThirds: data.graphics?.lowerThirds ?? [],
+                        displayRepeatWatermark: data.graphics?.displayRepeatWatermark ?? false,
+                    }
+                };
+            }
+
+            // Create the updated playlist object
+            const updatedPlaylist: Playlist = {
+                ...currentPlaylist, // Keep all other properties the same as the current playlist
+                schedules: currentPlaylist.schedules ? [...currentPlaylist.schedules, updatedSchedule] : [updatedSchedule],
+            };
+
+            // Update the playlist in the stored configuration
             storedConfig.playlists[playlistIndex] = updatedPlaylist;
 
             // Save the updated config
@@ -101,69 +130,52 @@ const SchedulePlaylistForm = () => {
     const handleLogoChange = (selectedValue: string) => {
         console.log("Selected playlist logo:", selectedValue);
         // Set the selected logo to true and others to false
-        createForm.setValue("graphics.displayLogo", selectedValue === "displayLogo");
-        createForm.setValue("graphics.displayLiveLogo", selectedValue === "displayLiveLogo");
+        scheduleForm.setValue("graphics.displayLogo", selectedValue === "displayLogo");
+        scheduleForm.setValue("graphics.displayLiveLogo", selectedValue === "displayLiveLogo");
     };
 
     const clearAllFields = () => {
-        createForm.reset();
+        scheduleForm.reset();
     }
 
     const handlePlaylistSelection = (selectedValue: string) => {
         const selectedPlaylistData = getPlaylists.find((playlist) => playlist.value === selectedValue);
-console.log('Selected playlist data:', selectedPlaylistData , selectedValue, getPlaylists);
-        if (selectedPlaylistData) {
+        const selectedScheduleData = getSchedules.find((schedule) => schedule.value === selectedValue);
+
+        if (selectedScheduleData) {
+            setFieldPrefix("schedules."); // Set prefix for schedule fields
+            setSelectedSchedule(selectedScheduleData as Option);
+        } else if (selectedPlaylistData) {
+            setFieldPrefix("");
             setSelectedPlaylist(selectedPlaylistData as Option);
+        }
 
-            // Fetch playlist data based on selection
-            const playlistData = getConfigJson()?.playlists.find(
-                (playlist :Playlist) => playlist.name === selectedPlaylistData.value
-            );
+        // Fill form with selected data (either playlist or schedule)
+        const configData = getConfigJson();
+        const playlistOrScheduleData = configData.playlists.find(
+            (item: Playlist) => item.name === (selectedScheduleData?.value || selectedPlaylistData?.value)
+        );
+        console.log('Selected playlist data:', selectedPlaylistData );
 
-            // Update form fields with selected playlist data
-            if (playlistData) {
-
-                createForm.reset({
-                    active: playlistData.active,
-                    playlistName: playlistData.name,
-                    type: playlistData.type as PlaylistType,
-                    color: playlistData.color,
-                    description: playlistData.description,
-                    urlOrFolder: playlistData.urlOrFolder,
-                    playingGeneralBumpers: playlistData.playingGeneralBumpers,
-                    repeat: playlistData.repeat,
-                    emptyReplacer: playlistData.emptyReplacer,
-                    specialBumperFolder: playlistData.specialBumperFolder,
-                    usingExternalStorage: playlistData.usingExternalStorage,
-                    seekTo: {
-                        program: playlistData.seekTo.program,
-                        position: playlistData.seekTo.position
-                    },
-                    graphics: {
-                        displayLogo: playlistData.graphics.displayLogo,
-                        logoPosition: playlistData.graphics.logoPosition,
-                        news: {
-                            newsReplays: playlistData.graphics.news.replays,
-                            speed: playlistData.graphics.news.speed,
-                            starts: playlistData.graphics.news.starts,
-                            messages: playlistData.graphics.news.messages
-                        },
-                        lowerThirds: playlistData.graphics.lowerThirds,
-                        displayLiveLogo: playlistData.graphics.displayLiveLogo,
-                        displayRepeatWatermark: playlistData.graphics.displayRepeatWatermark
-                    },
-                    schedules: playlistData.schedules
-                });
-            }
+        if (playlistOrScheduleData) {
+            scheduleForm.reset({
+                ...playlistOrScheduleData,
+                ...(fieldPrefix === "schedules." && {
+                    schedules: playlistOrScheduleData.schedules
+                })
+            });
         }
     };
 
+    console.log("Values: ",scheduleForm.getValues());
+    console.log("Errors: ",scheduleForm.formState.errors);
+
     return (
-        <Form {...createForm}>
-            <form className="space-y-6 flex-1" onSubmit={createForm.handleSubmit(handleUpdatePlaylist)}>
+        <Form {...scheduleForm}>
+            <form className="space-y-6 flex-1" onSubmit={scheduleForm.handleSubmit(handleUpdateSchedule)}>
                 <section className="mb-12 space-y-1">
-                    <p className="text-dark-700">Schedule an 📜</p>
-                    <h1 className="header text-white">Existing Playlist/Schedule</h1>
+                    <p className="text-dark-700">Existing Playlist/Schedule</p>
+                    <h1 className="header text-white">Schedule a 📜</h1>
                 </section>
 
                 <CustomFormField
@@ -173,36 +185,36 @@ console.log('Selected playlist data:', selectedPlaylistData , selectedValue, get
                     placeholder="Select Playlist to edit"
                     selectOptions={getPlaylists}
                     onChange={handlePlaylistSelection}
-                    control={createForm.control}/>
+                    control={scheduleForm.control}/>
                 <CustomFormField
                     fieldType={FormFieldType.CHECKBOX}
-                    name="schedules.active"
+                    name={`${fieldPrefix}active`}
                     label="Active"
-                    control={createForm.control}
+                    control={scheduleForm.control}
                 />
                 <div className="flex flex-col gap-6 xl:flex-row">
                     <CustomFormField
                         fieldType={FormFieldType.MULTI_SELECT}
-                        name="schedules.days"
+                        name={`${fieldPrefix}days`}
                         label="Weekly Day(s)"
                         placeholder="Select day or days"
                         badgeClassName="bg-green-700"
                         multiSelectOptions={Days}
-                        control={createForm.control}
-                        description="If no Days or Dates are selected but start Time is defined, the playlist schedules daily"
-                    />
+                        control={scheduleForm.control}
+                        description="If no Days or Dates are selected but start Time is defined,
+                        the playlist schedules daily"/>
                     <CustomFormField
                         fieldType={FormFieldType.COMBO_BOX}
-                        name="schedules.start"
+                        name={`${fieldPrefix}start`}
                         label="Start Time"
                         placeholder="Choose Start Time"
                         selectOptions={timeSlotsArray}
-                        control={createForm.control} />
+                        control={scheduleForm.control} />
                     <CustomFormField
                         fieldType={FormFieldType.DATE_PICKER}
-                        name="schedules.dates"
+                        name={`${fieldPrefix}dates`}
                         label="Date(s)"
-                        control={createForm.control}
+                        control={scheduleForm.control}
                     />
                 </div>
 
@@ -211,7 +223,7 @@ console.log('Selected playlist data:', selectedPlaylistData , selectedValue, get
                         fieldType={FormFieldType.SKELETON}
                         name="logo"
                         label="Logo Type"
-                        control={createForm.control}
+                        control={scheduleForm.control}
                         renderSkeleton={(field) => (
                             <FormControl>
                                 <RadioGroup className="flex h-11 gap-6 xl:justify-between"
@@ -221,9 +233,9 @@ console.log('Selected playlist data:', selectedPlaylistData , selectedValue, get
                                                 handleLogoChange(value);
                                             }}
                                             value={
-                                                createForm.watch("schedules.graphics.displayLogo")
+                                                scheduleForm.watch(`${fieldPrefix}graphics.displayLogo` as "graphics.displayLogo")
                                                     ? "displayLogo"
-                                                    : createForm.watch("schedules.graphics.displayLiveLogo")
+                                                    : scheduleForm.watch(`${fieldPrefix}graphics.displayLiveLogo`as "graphics.displayLiveLogo")
                                                         ? "displayLiveLogo"
                                                         : "none"
                                             }>
@@ -244,10 +256,10 @@ console.log('Selected playlist data:', selectedPlaylistData , selectedValue, get
                     />
                     <CustomFormField
                         fieldType={FormFieldType.SELECT}
-                        name="schedules.graphics.logoPosition"
+                        name={`${fieldPrefix}graphics.logoPosition`}
                         label="Logo Position"
                         placeholder="Select logo position"
-                        control={createForm.control}>
+                        control={scheduleForm.control}>
                         {LogoPositionType.map(type => (
                             <SelectItem key={type.value} value={type.value}>{type.name}</SelectItem>
                         ))}
@@ -261,30 +273,30 @@ console.log('Selected playlist data:', selectedPlaylistData , selectedValue, get
                 <div className="w-full p-4 border border-dark-500 rounded-lg shadow-md">
                     <CustomFormField
                         fieldType={FormFieldType.TEXTAREA}
-                        name="schedules.graphics.news.messages"
+                        name={`${fieldPrefix}graphics.news.messages`}
                         label="Ticker News/Notifications Separated by #"
                         placeholder="Message separated by #"
-                        control={createForm.control}/>
+                        control={scheduleForm.control}/>
                     <div className="flex flex-col gap-4 xl:flex-row mt-4">
                         <CustomFormField
                             fieldType={FormFieldType.INPUT}
-                            name="schedules.graphics.news.starts"
+                            name={`${fieldPrefix}graphics.news.starts`}
                             label="Starting minutes Separated by #"
                             placeholder="When (nth) minutes after start separated by #"
-                            control={createForm.control}/>
+                            control={scheduleForm.control}/>
                         <CustomFormField
                             fieldType={FormFieldType.INPUT}
-                            name="schedules.graphics.news.newsReplays"
+                            name={`${fieldPrefix}graphics.news.newsReplays`}
                             label="Replays"
                             placeholder="Enter number of replays of ticker news for every (nth) minute"
                             inputType="number"
-                            control={createForm.control}/>
+                            control={scheduleForm.control}/>
                         <CustomFormField
                             fieldType={FormFieldType.SELECT}
-                            name="schedules.graphics.news.speed"
+                            name={`${fieldPrefix}graphics.news.speed`}
                             label="Ticker Speed"
                             placeholder="Choose a ticker Speed"
-                            control={createForm.control}>
+                            control={scheduleForm.control}>
                             {SpeedTypes.map(type => (
                                 <SelectItem key={type.value} value={type.value}>
                                     {type.name}
