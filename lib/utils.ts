@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {Config, Playlist, Schedule} from "@/constants";
+import {Config} from "@/constants";
 import {Option} from "@/components/forms/DeletePlaylistScheduleForm";
 
 export function cn(...inputs: ClassValue[]) {
@@ -144,7 +144,6 @@ export const getFilteredPlaylists = (
         return {
           label: name,
           value: playlist.name.trim(),
-          schedule: playlist.schedules,
           playlist: playlist,
         };
       });
@@ -157,29 +156,50 @@ export const getFilteredSchedules = (
     filterActive: boolean = true
 ): Option[] => {
   return (config.playlists ?? [])
-      .flatMap((playlist) =>
-          Array.isArray(playlist.schedules) // Ensure schedules is an array before proceeding
-              ? playlist.schedules
-                  .filter((schedule: Schedule) => !filterActive || schedule.active) // Filter schedules if active
-                  .map((schedule: Schedule) => {
-                    const statusIcon = schedule.active ? "✅" : "❌"; // Status icon for active/inactive
+      .map((playlist, index) => ({ ...playlist, index }))
+      .filter((playlist) => !filterActive || playlist.active)
+      .sort((a, b) => a.index - b.index)
+      .reduce((acc, playlist) => {
+        const statusIcon = playlist.active ? "✅" : "❌";
 
-                    let name = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name; // Playlist name with status icon
+        // Ensure schedules is an array or fallback to an empty array
+        const schedules = Array.isArray(playlist.schedules) ? playlist.schedules : [];
 
-                    // Additional details if fully specified
-                    if (fullySpecified) {
-                      if (schedule.start) name += ` | @${schedule.start}`;
-                      if (schedule.days) name += ` | Days: ${schedule.days.join(",")}`;
-                    }
+        if (schedules.length === 0) {
+          return acc;
+        }
 
-                    return {
-                      label: name,
-                      value: `${schedule.name} ${schedule.start} ${schedule.schedule}`,
-                    };
-                  })
-              : [] // Return empty array if schedules is not an array
-      );
+        // Map each schedule to the desired format and add to the accumulator
+        const scheduleOptions = schedules.map((schedule, scheduleIndex) => {
+          let scheduleName = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name;
+          if (fullySpecified) {
+            scheduleName += ` #${scheduleIndex + 1}`;
+            if (schedule.start) scheduleName += ` | @${schedule.start}`;
+            if (schedule.days.length > 1) scheduleName += ` | Days: ${schedule.days.join(",")}`;
+          }
+          return {
+            label: scheduleName,
+            value: scheduleName,
+            schedules: schedule,
+            key: schedule.name.trim(),
+          };
+        });
+        return [...acc, ...scheduleOptions]; // Accumulate all schedule options
+      }, [] as Option[]); // Initialize the accumulator as an empty array
 };
+
+export const deleteAllSchedules = (config: Config): Config => {
+  const updatedPlaylists = (config.playlists ?? []).map((playlist) => ({
+    ...playlist,
+    schedules: [],
+  }));
+
+  return {
+    ...config,
+    playlists: updatedPlaylists,
+  };
+};
+
 
 
 export const generateTimeSlots =() => {

@@ -16,7 +16,14 @@ import {
     logoTypes, Playlist, PlaylistFormDefaultValues, PlaylistType,
     SpeedTypes,
 } from "@/constants";
-import {generateTimeSlots, getConfigJson, getFilteredPlaylists, getFilteredSchedules, modifyConfig} from "@/lib/utils";
+import {
+    deleteAllSchedules,
+    generateTimeSlots,
+    getConfigJson,
+    getFilteredPlaylists,
+    getFilteredSchedules,
+    modifyConfig
+} from "@/lib/utils";
 import RegularButton from "@/components/RegularButton";
 import {SelectItem} from "@/components/ui/select";
 import { RadioGroup } from "@radix-ui/react-radio-group"
@@ -28,12 +35,15 @@ import {Option} from "@/components/ui/multipleselector";
 
 const SchedulePlaylistForm = () => {
     const [isLoading, setIsLoading] = useState(false);
+    const [schedule, setSchedule] = useState(true);
     const getPlaylists = getFilteredPlaylists(getConfigJson() ?? {playlists: []}, true, true);
     const getSchedules =  getFilteredSchedules(getConfigJson() ?? {playlists: []}, true, false);
     const [selectedPlaylist, setSelectedPlaylist] = useState<Option | null>(null);
     const [selectedSchedule, setSelectedSchedule] = useState<Option | null>(null);
     const timeSlotsArray = generateTimeSlots() || [];
     const [fieldPrefix, setFieldPrefix] = useState("");
+
+    const storedConfig = getConfigJson();
 
     const scheduleForm = useForm<z.infer<typeof ScheduleSchema>>({
         resolver: zodResolver(ScheduleSchema),
@@ -45,7 +55,6 @@ const SchedulePlaylistForm = () => {
     function handleUpdateSchedule(data: z.infer<typeof ScheduleSchema>) {
         setIsLoading(true);
 
-        const storedConfig = getConfigJson();
         const playlistIndex = storedConfig.playlists?.findIndex(
             (playlist: Playlist) => playlist.name === (selectedSchedule ? selectedSchedule.name : selectedPlaylist?.value)
         );
@@ -56,7 +65,6 @@ const SchedulePlaylistForm = () => {
             // Determine if a schedule is selected or if we need to create a new one
             let updatedSchedule = null;
             const days = data.dates?.map(day => day.value);
-            console.log("days: ", days)
             if (selectedSchedule) {
                 // If a schedule is selected, update it
                 updatedSchedule = {
@@ -138,9 +146,14 @@ const SchedulePlaylistForm = () => {
         scheduleForm.reset();
     }
 
+    const deleteAllPLaylistSchedules = () => {
+        deleteAllSchedules(storedConfig);
+    }
+
     const handlePlaylistSelection = (selectedValue: string) => {
         const selectedPlaylistData = getPlaylists.find((playlist) => playlist.value === selectedValue);
         const selectedScheduleData = getSchedules.find((schedule) => schedule.value === selectedValue);
+        console.log('scheduleOptions', selectedScheduleData)
 
         if (selectedScheduleData) {
             setFieldPrefix("schedules."); // Set prefix for schedule fields
@@ -152,19 +165,50 @@ const SchedulePlaylistForm = () => {
 
         // Fill form with selected data (either playlist or schedule)
         const configData = getConfigJson();
-        const playlistOrScheduleData = configData.playlists.find(
-            (item: Playlist) => item.name === (selectedScheduleData?.value || selectedPlaylistData?.value)
+        const playlistData = configData.playlists.find(
+            (playlist: Playlist) => playlist.name === (selectedPlaylistData?.value)
         );
-        console.log('Selected playlist data:', selectedPlaylistData );
 
-        if (playlistOrScheduleData) {
+        const scheduleData = selectedScheduleData;
+
+        console.log('Selected playlist data:', selectedPlaylistData );
+        console.log('Selected scheduleData:', scheduleData?.schedules );
+
+        if (selectedScheduleData) {
+            const schedule = selectedScheduleData.schedules;
+            console.log('Selected tata:', schedule );
             scheduleForm.reset({
-                ...playlistOrScheduleData,
-                ...(fieldPrefix === "schedules." && {
-                    schedules: playlistOrScheduleData.schedules
-                })
+                ...playlistData,
+                schedules: {
+                    active: schedule?.active ?? false,
+                    name: schedule?.name ?? "",
+                    days: schedule?.days ?? [],
+                    start: schedule?.start ?? "",
+                    dates: schedule?.dates ?? [],
+                    type: schedule?.type ?? "",
+                    color: schedule?.color ?? "",
+                    seekTo: schedule?.seekTo ?? "",
+                    graphics: {
+                        displayLogo: schedule?.graphics?.displayLogo ?? false,
+                        displayLiveLogo: schedule?.graphics?.displayLiveLogo ?? false,
+                        news: {
+                            replays: schedule?.graphics?.news?.replays ?? 0,
+                            speed: schedule?.graphics?.news?.speed ?? "FAST",
+                            starts: schedule?.graphics?.news?.starts ?? "",
+                            messages: schedule?.graphics?.news?.messages ?? "",
+                        },
+                        lowerThirds: schedule?.graphics?.lowerThirds ?? [],
+                        displayRepeatWatermark: schedule?.graphics?.displayRepeatWatermark ?? false,
+                    }
+                }
+            });
+        } else if (playlistData || scheduleData) {
+            scheduleForm.reset({
+                ...playlistData,
             });
         }
+
+        setSchedule(false);
     };
 
     console.log("Values: ",scheduleForm.getValues());
@@ -183,7 +227,7 @@ const SchedulePlaylistForm = () => {
                     name="selectSchedule"
                     label="Select Playlist to edit"
                     placeholder="Select Playlist to edit"
-                    selectOptions={getPlaylists}
+                    selectOptions={[...getPlaylists,...getSchedules]}
                     onChange={handlePlaylistSelection}
                     control={scheduleForm.control}/>
                 <CustomFormField
@@ -312,7 +356,7 @@ const SchedulePlaylistForm = () => {
                 </section>
                 <LowerthirdTable/>
                 <div className="flex flex-col gap-4 xl:flex-row">
-                    <RegularButton isLoading={isLoading} className="shad-danger-btn">
+                    <RegularButton isLoading={isLoading} className="shad-danger-btn" onClick={deleteAllPLaylistSchedules}>
                         Delete All Schedules
                     </RegularButton>
                     <RegularButton isLoading={isLoading} className="shad-blue-btn" onClick={clearAllFields}>
@@ -321,7 +365,7 @@ const SchedulePlaylistForm = () => {
                     <RegularButton isLoading={isLoading} className="shad-danger-btn">
                        Cancel
                     </RegularButton>
-                    <ExportButton isLoading={isLoading}>
+                    <ExportButton isLoading={schedule} name="Schedule">
                         Schedule
                     </ExportButton>
                 </div>

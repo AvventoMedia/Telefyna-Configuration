@@ -223,6 +223,7 @@ type Graphics = {
 };
 
 export type Schedule = {
+    dates: string[];
     schedule: number;
     name: string;
     active: boolean;
@@ -230,7 +231,7 @@ export type Schedule = {
     type: PlaylistType;
     start: string;
     color: string;
-    days: number[];
+    days: string[];
     seekTo: SeekTo;
 };
 

@@ -20,7 +20,8 @@ import {
 
 
 // ComboBox Component
-const ComboBox = ({ options, value, onChange, placeholder = "Select an option" }: { options: any[], value: string, onChange: (value: string) => void, placeholder?: string }) => {
+const ComboBox = React.forwardRef<HTMLButtonElement, { options: any[], value: string, onChange: (value: string) => void, placeholder?: string }>(
+    ({ options, value, onChange, placeholder = "Select an option" }: { options: any[], value: string, onChange: (value: string) => void, placeholder?: string }) => {
     const [open, setOpen] = React.useState(false);
 
     return (
@@ -71,6 +72,7 @@ const ComboBox = ({ options, value, onChange, placeholder = "Select an option" }
             </PopoverContent>
         </Popover>
     );
-}
+    }
+);
 
 export default ComboBox;

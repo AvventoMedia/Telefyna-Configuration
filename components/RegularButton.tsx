@@ -2,7 +2,7 @@ import React from 'react'
 import {Button} from "@/components/ui/button";
 import Image from "next/image";
 
-interface ButtonProps {
+export interface ButtonProps {
     isLoading?: boolean
     className?: string
     name?: string

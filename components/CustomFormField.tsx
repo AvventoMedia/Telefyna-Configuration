@@ -138,7 +138,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                         }}
                         defaultValue={field.value}>
                       <FormControl>
-                          <SelectTrigger className="shad-select-trigger shad-input-label">
+                          <SelectTrigger className="shad-select-trigger shad-input-label" ref={field.ref}>
                               <SelectValue placeholder={placeholder}/>
                           </SelectTrigger>
                       </FormControl>
@@ -188,6 +188,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
             return (
                 <FormControl className="w-full">
                     <ComboBox
+                        {...field}
                         options={props.selectOptions ?? []}
                         value={selectedValue}
                         onChange={(value) => {

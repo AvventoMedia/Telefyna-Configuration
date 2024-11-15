@@ -16,19 +16,6 @@ import {
 } from '@/components/ui/form';
 import MultipleSelector from "@/components/ui/multipleselector";
 
-const OPTIONS: Option[] = [
-    { label: 'nextjs', value: 'Nextjs' },
-    { label: 'React', value: 'react' },
-    { label: 'Remix', value: 'remix' },
-    { label: 'Vite', value: 'vite' },
-    { label: 'Nuxt', value: 'nuxt' },
-    { label: 'Vue', value: 'vue' },
-    { label: 'Svelte', value: 'svelte' },
-    { label: 'Angular', value: 'angular' },
-    { label: 'Ember', value: 'ember', disable: true },
-    { label: 'Gatsby', value: 'gatsby', disable: true },
-    { label: 'Astro', value: 'astro' },
-];
 
 const optionSchema = z.object({
     label: z.string(),
@@ -47,8 +34,10 @@ export enum FormFieldType {
 }
 
 export interface Option {
+    key?: string;
     label: string;
     value: string;
+    schedules?: Schedule;
     disable?: boolean;
 }
 
