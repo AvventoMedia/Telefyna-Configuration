@@ -67,27 +67,28 @@ export const PlaylistFormDefaultValues = {
     specialBumperFolder: "",
     color: "",
     logo: "",
-    schedules: {
-        schedule: "",
-        active: true,
-        graphics: {
-            displayLogo: false,
-            displayLiveLogo: false,
-            displayRepeatWatermark: false,
-            logoPosition: LogoPosition.TOP,
-            news: {
-                newsReplays: 0,
-                speed: "FAST",
-                starts: "",
-                messages: "",
-            },
-            lowerThirds: [],
-        },
-        start: "",
-        days: [],
-        dates: [],
-    },
 };
+
+export const ScheduleFormDefaultValues = {
+    schedule: "",
+    active: true,
+    graphics: {
+        displayLogo: false,
+        displayLiveLogo: false,
+        displayRepeatWatermark: false,
+        logoPosition: LogoPosition.TOP,
+        news: {
+            newsReplays: 0,
+            speed: "FAST",
+            starts: "",
+            messages: "",
+        },
+        lowerThirds: [],
+    },
+    start: "",
+    days: [],
+    dates: [],
+}
 
 export const SelectPlaylistTypes = [
     {
@@ -255,7 +256,6 @@ export type Playlist = {
     playingGeneralBumpers?: boolean;
     specialBumperFolder?: string;
     repeat?: ResumingType;
-    schedules?: Schedule[];
     emptyReplacer?: null | number;
 };
 
@@ -269,4 +269,5 @@ export type Config = {
     wait: number;
     alerts?: Alerts;
     playlists?: Playlist[];
+    schedules?: Schedule[];
 };

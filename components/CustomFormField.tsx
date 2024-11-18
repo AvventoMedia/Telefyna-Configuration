@@ -22,6 +22,7 @@ import DatePanel from "react-multi-date-picker/plugins/date_panel";
 interface CustomProps {
     control: Control<any>,
     fieldType: FormFieldType,
+    value?: any,
     name: string,
     label?: string,
     onValueChange?: (value: any) => void
@@ -105,6 +106,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                     />
                     <FormControl>
                         <DatePicker
+                            {...field}
                             multiple
                             value={field.value || []}
                             onChange={(date) => {
@@ -158,6 +160,10 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                         hidePlaceholderWhenSelected
                         placeholder={placeholder}
                         badgeClassName={props.badgeClassName}
+                        onChange={(options) => {
+                            field.onChange(options);
+                            props.onChange && props.onChange(options);
+                        }}
                         emptyIndicator={
                             <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
                                 no results found.
@@ -190,7 +196,7 @@ const RenderField = ({field, props}: {field: any, props: CustomProps}) => {
                     <ComboBox
                         {...field}
                         options={props.selectOptions ?? []}
-                        value={selectedValue}
+                        value={props.value ?? selectedValue}
                         onChange={(value) => {
                             setValue(value);
                             field.onChange(value);

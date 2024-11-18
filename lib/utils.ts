@@ -80,6 +80,9 @@ export function decryptKey(passkey: string) {
 
 // Get the 'configJson' item from localStorage and parse it as JSON
 export function getConfigJson() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
   const config = localStorage.getItem('configJson');
   return config ? JSON.parse(config) : null;
 }
@@ -155,48 +158,37 @@ export const getFilteredSchedules = (
     fullySpecified: boolean = false,
     filterActive: boolean = true
 ): Option[] => {
-  return (config.playlists ?? [])
-      .map((playlist, index) => ({ ...playlist, index }))
-      .filter((playlist) => !filterActive || playlist.active)
+  const schedulesArray = Array.isArray(config.schedules) ? config.schedules : [];
+  console.log('Filtered schedules array:', schedulesArray);
+
+  return schedulesArray
+      .map((schedule, index) => ({ ...schedule, index }))
+      .filter((schedule) => !filterActive || schedule.active)
       .sort((a, b) => a.index - b.index)
-      .reduce((acc, playlist) => {
-        const statusIcon = playlist.active ? "✅" : "❌";
+      .map((schedule, index) => {
+        const statusIcon = schedule.active ? "✅" : "❌";
+        let scheduleName = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name;
 
-        // Ensure schedules is an array or fallback to an empty array
-        const schedules = Array.isArray(playlist.schedules) ? playlist.schedules : [];
-
-        if (schedules.length === 0) {
-          return acc;
+        if (fullySpecified) {
+          scheduleName += ` #${index + 1}`;
+          if (schedule.start) scheduleName += ` | @${schedule.start}`;
+          if (schedule.days?.length > 1) scheduleName += ` | Days: ${schedule.days.join(",")}`;
         }
 
-        // Map each schedule to the desired format and add to the accumulator
-        const scheduleOptions = schedules.map((schedule, scheduleIndex) => {
-          let scheduleName = fullySpecified ? `${statusIcon} ${schedule.name}` : schedule.name;
-          if (fullySpecified) {
-            scheduleName += ` #${scheduleIndex + 1}`;
-            if (schedule.start) scheduleName += ` | @${schedule.start}`;
-            if (schedule.days.length > 1) scheduleName += ` | Days: ${schedule.days.join(",")}`;
-          }
-          return {
-            label: scheduleName,
-            value: scheduleName,
-            schedules: schedule,
-            key: schedule.name.trim(),
-          };
-        });
-        return [...acc, ...scheduleOptions]; // Accumulate all schedule options
-      }, [] as Option[]); // Initialize the accumulator as an empty array
+        return {
+          label: scheduleName,
+          value: scheduleName,
+          schedules: schedule,
+          key: schedule.name.trim(),
+        };
+      });
 };
 
-export const deleteAllSchedules = (config: Config): Config => {
-  const updatedPlaylists = (config.playlists ?? []).map((playlist) => ({
-    ...playlist,
-    schedules: [],
-  }));
 
+export const deleteAllSchedules = (config: Config): Config => {
   return {
     ...config,
-    playlists: updatedPlaylists,
+    schedules: [],
   };
 };
 
