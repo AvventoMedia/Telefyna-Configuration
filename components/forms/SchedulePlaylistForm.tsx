@@ -53,6 +53,13 @@ const SchedulePlaylistForm = () => {
         },
     })
 
+    useEffect(() => {
+        const daysFromForm = scheduleForm.getValues("days") ?? [];
+
+        setSelectedDays(daysFromForm as Option[]);
+    }, [scheduleForm.getValues("days")]);
+
+
     function handleUpdateSchedule(data: z.infer<typeof ScheduleSchema>) {
         setIsLoading(true);
 
@@ -68,7 +75,6 @@ console.log('playlistIndex: ', playlistIndex,"schedule: ", selectedSchedule,);
             const days = selectedDays.map((day: Option) => day.value);
 
             if (selectedSchedule) {
-                console.log('start: ', data.start);
                 // If a schedule is selected, update it
                 updatedSchedule = {
                     active: data.active ?? currentPlaylist.schedules.active,
@@ -124,13 +130,10 @@ console.log('playlistIndex: ', playlistIndex,"schedule: ", selectedSchedule,);
                     const updated = schedule.name === selectedSchedule.key
                         ? { ...schedule, ...updatedSchedule }
                         : schedule;
-                    console.log('Updated schedule:',  updated); // Log the updated schedule object
                     return updated;
                 })
-                : [...(storedConfig.schedules || []), updatedSchedule] // Add the new schedule if no selected schedule
+                : [...(storedConfig.schedules || []), updatedSchedule]
             );
- console.log('updatedConfig', updatedConfigSchedule);
-            // Update the playlist in the stored configuration
             const updatedConfig: Config = {
                 ...storedConfig,
                 schedules: updatedConfigSchedule,
@@ -163,7 +166,6 @@ console.log('playlistIndex: ', playlistIndex,"schedule: ", selectedSchedule,);
     const handlePlaylistSelection = (selectedValue: string) => {
         const selectedPlaylistData = getPlaylists.find((playlist) => playlist.value === selectedValue);
         const selectedScheduleData = getSchedules.find((schedule) => schedule.value === selectedValue);
-console.log("Selected playlist data:", selectedPlaylistData,"Selected schedule data:", selectedScheduleData);
         if (selectedScheduleData) {
             setSelectedSchedule(selectedScheduleData as Option);
         } else if (selectedPlaylistData) {
@@ -183,12 +185,20 @@ console.log("Selected playlist data:", selectedPlaylistData,"Selected schedule d
                 playlistName: schedule?.name ?? "",
                 days:schedule?.days?.map(dayValue => {
                     const day = Days.find(d => d.value === dayValue); // Find the day object based on the value
-                    return day ? { value: day.value, label: day.label } : { value: dayValue, label: "" }; // Return the day object
+                    return day ?
+                        {
+                            label: day.label,
+                            value: day.value
+                        } :
+                        {
+                            label: "",
+                            value: dayValue
+                        };
                 }) ?? [],
                 start: schedule?.start ?? "",
                 dates: schedule?.dates?.map(date => ({
                     value: date,
-                    label: date // or provide a label if you have one
+                    label: date
                 })) ?? [],
                 type: (schedule?.type as PlaylistType) ?? undefined,
                 color: schedule?.color ?? "",
@@ -216,8 +226,8 @@ console.log("Selected playlist data:", selectedPlaylistData,"Selected schedule d
 
         setSchedule(false);
     };
-    console.log("Values: ",scheduleForm.getValues());
-    console.log("Errors: ",scheduleForm.formState.errors);
+    // console.log("Values: ",scheduleForm.getValues());
+    // console.log("Errors: ",scheduleForm.formState.errors);
 
     return (
         <Form {...scheduleForm}>
